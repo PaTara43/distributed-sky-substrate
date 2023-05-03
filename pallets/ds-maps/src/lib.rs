@@ -2,13 +2,14 @@
 #![allow(clippy::unused_unit)]
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
+pub use pallet_ds_accounts::{UAVRegistry};
 
 use frame_support::{
     codec::{Decode, Encode},
     storage::StorageDoubleMap,
     dispatch::fmt::Debug,
     sp_runtime::sp_std::{ops::{Sub, Div, Mul, Add}, vec::Vec},
-    decl_error, decl_event, decl_module, decl_storage, dispatch, ensure,    
+    decl_error, decl_event, decl_module, decl_storage, dispatch, ensure,
     weights::Weight,
     Parameter,
     traits::Get,
@@ -17,7 +18,7 @@ use frame_support::{
 use sp_std::{
     str::FromStr,
     marker::PhantomData,
-    vec, 
+    vec,
     mem::swap,
     cmp::{max, min}
 };
@@ -85,20 +86,20 @@ impl<
     pub fn get_dimensions(self) -> Point2D<Coord> {
         self.south_west.get_distance_vector(self.north_east)
     }
-    
+
     /// True if this rect intersects other, excluding edges.
     pub fn intersects_rect(self, target: Rect2D<Coord>) -> bool {
-        !(self.north_east.lon <= target.south_west.lon || 
+        !(self.north_east.lon <= target.south_west.lon ||
           self.south_west.lon >= target.north_east.lon ||
-          self.north_east.lat <= target.south_west.lat || 
+          self.north_east.lat <= target.south_west.lat ||
           self.south_west.lat >= target.north_east.lat)
     }
 
-    /// True, if given point lies inside the rect, excluding edges. 
+    /// True, if given point lies inside the rect, excluding edges.
     pub fn is_point_inside(&self, target: Point2D<Coord>) -> bool {
-        !(self.north_east.lon <= target.lon || 
+        !(self.north_east.lon <= target.lon ||
           self.south_west.lon >= target.lon ||
-          self.north_east.lat <= target.lat || 
+          self.north_east.lat <= target.lat ||
           self.south_west.lat >= target.lat)
     }
 }
@@ -177,7 +178,7 @@ impl<Coord> Zone<Coord> {
     pub fn new(zone_id: ZoneId, rect: Rect2D<Coord>, height: LightCoord) -> Self {
         Zone {zone_id, rect, height}
     }
-} 
+}
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Default, Debug, Clone, Copy, PartialEq, Eq)]
@@ -223,7 +224,7 @@ impl<
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Clone, Default, Debug, PartialEq, Eq)]
-pub struct Waypoint<Coord, Moment> { 
+pub struct Waypoint<Coord, Moment> {
     pub location: Point3D<Coord>,
     pub arrival: Moment,
 }
@@ -237,7 +238,7 @@ impl<Coord, Moment> Waypoint<Coord, Moment> {
 // Actually, this is line section, so we need limits
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Clone, Copy, Default, Debug, PartialEq, Eq)]
-pub struct Line<Coord, BigCoord> { 
+pub struct Line<Coord, BigCoord> {
     // pub a: Coord,
     // pub b: Coord,
     // pub c: Coord,
@@ -253,12 +254,12 @@ impl<
     pub fn new(point_0: Point2D<Coord>, point_1: Point2D<Coord>) -> Self {
         // Form coefficients (y1 - y2)x + (x2 - x1)y + (x1y2 - x2y1) = 0
         // TODO (n>2) in a cycle
-        // let a = (point_0.lat.try_into() - point_1.lat.try_into()).try_from(); 
-        // let b = (point_1.lon.try_into() - point_0.lon.try_into()).try_from(); 
+        // let a = (point_0.lat.try_into() - point_1.lat.try_into()).try_from();
+        // let b = (point_1.lon.try_into() - point_0.lon.try_into()).try_from();
         // let c = (
-        // (point_0.lon.try_into() * point_1.lat.try_into()) - 
+        // (point_0.lon.try_into() * point_1.lat.try_into()) -
         // (point_1.lon.try_into() * point_0.lat.try_into())
-        // ).try_from(); 
+        // ).try_from();
         Line {
             // a: a,
             // b: b,
@@ -266,20 +267,20 @@ impl<
             start_point: point_0,
             end_point: point_1,
             _phantom: PhantomData
-        } 
+        }
     }
     fn coord_from_str (s: &str) -> Coord {
         match Coord::from_str(s) {
             Ok(v) => v,
             Err(_) => Default::default(),
         }
-    } 
+    }
 
-    // Realisation of Bresenham's line algorithm 
+    // Realisation of Bresenham's line algorithm
     pub fn get_route_areas(self, root: RootBox<Coord>) -> Vec<AreaId> {
         let start_area = root.detect_intersected_area(self.start_point);
         let end_area = root.detect_intersected_area(self.end_point);
-        // In case everything is in one area 
+        // In case everything is in one area
         if start_area == end_area {return vec![start_area]}
         let mut output = Vec::new();
         let delta = root.delta;
@@ -288,7 +289,7 @@ impl<
         let mut dy = self.end_point.lon - self.start_point.lon;
         let incx = dx.signum() * delta;
         let incy = dy.signum() * delta;
-        dx = dx.abs(); 
+        dx = dx.abs();
         dy = dy.abs();
         let pdx: Coord;
         let pdy: Coord;
@@ -308,7 +309,7 @@ impl<
         let mut count: Coord = zero;
         let mut err = el / Line::coord_from_str("2");
         while count < el {
-            count = count + delta; 
+            count = count + delta;
             err = err - es;
             if err < zero {
                 err = err + el;
@@ -335,7 +336,7 @@ impl<
         let south_line = Line::new(south_east, rect.south_west);
 
         let rect_lines = vec![west_line, north_line, east_line, south_line];
-        
+
         for line in rect_lines.iter() {
             if self.is_lines_cross(*line) { return true; }
         }
@@ -348,9 +349,9 @@ impl<
         Line::projection_intersect(self.start_point.lon, self.end_point.lon, line.start_point.lon, line.end_point.lon) &&
         // Check, that points of AB lies on different sides of CD, and vice versa
         // TODO basically we need only signs and zero-condition, consider refactor
-        ((Line::area(self.start_point, self.end_point, line.start_point) * 
+        ((Line::area(self.start_point, self.end_point, line.start_point) *
         Line::area(self.start_point, self.end_point, line.end_point)) <= BigCoord::get_epsilon()) &&
-        ((Line::area(line.start_point, line.end_point, self.start_point) * 
+        ((Line::area(line.start_point, line.end_point, self.start_point) *
         Line::area(line.start_point, line.end_point, self.end_point)) <= BigCoord::get_epsilon())
     }
 
@@ -359,14 +360,14 @@ impl<
         let (mut a, mut b, mut c, mut d) = (_a, _b, _c, _d);
         if a > b { swap(&mut a, &mut b) }
         if c > d { swap(&mut c, &mut d) }
-        
+
         max(a,c) <= min(b,d)
     }
-    
+
     // Yea, this fn hurts
     // Signed area of a triangle, oriented clockwise (same as vector multiplication)
     fn area(a: Point2D<Coord>, b: Point2D<Coord>, c: Point2D<Coord>) -> BigCoord {
-        (b.lat.try_into() - a.lat.try_into()) * (c.lon.try_into() - a.lon.try_into()) - 
+        (b.lat.try_into() - a.lat.try_into()) * (c.lon.try_into() - a.lon.try_into()) -
         (b.lon.try_into() - a.lon.try_into()) * (c.lat.try_into() - a.lat.try_into())
     }
 }
@@ -437,12 +438,12 @@ mod line_tests {
     }
 
     // In this section we try crossing different lines
-    mod crossing_line_tests { 
+    mod crossing_line_tests {
         use super::*;
 
         #[test]
         fn lines_cross() {
-            // I'm not sure, why do i have to specify variable type in each fn 
+            // I'm not sure, why do i have to specify variable type in each fn
             let a_first_point: Point2D<Coord> = Point2D::new(coord("0.1"),
                 coord("0.1"));
             let a_second_point = Point2D::new(coord("1"),
@@ -620,7 +621,7 @@ impl<
         }
         let root_dimensions = root_projection.get_dimensions();
         let touch_vector = root_projection.south_west.get_distance_vector(touch);
-        
+
         let row = touch_vector.lat.integer_division_u16(self.delta) + 1;
         let column = touch_vector.lon.integer_division_u16(self.delta) + 1;
         let total_rows = root_dimensions.lat.integer_division_u16(self.delta);
@@ -675,15 +676,15 @@ mod rootbox_tests {
 
         let edge_point = Point2D::new(coord("2"),
                                       coord("3"));
-        assert_eq!(root.detect_intersected_area(edge_point), 0); 
+        assert_eq!(root.detect_intersected_area(edge_point), 0);
 
         let inner_mid_point = Point2D::new(coord("1"),
                                             coord("1"));
-        assert_eq!(root.detect_intersected_area(inner_mid_point), 4); 
+        assert_eq!(root.detect_intersected_area(inner_mid_point), 4);
 
         let inner_edge_point = Point2D::new(coord("1"),
                                             coord("0.5"));
-        assert_eq!(root.detect_intersected_area(inner_edge_point), 2); 
+        assert_eq!(root.detect_intersected_area(inner_edge_point), 2);
 
         let out_point = Point2D::new(coord("50"),
                                      coord("50"));
@@ -815,7 +816,7 @@ pub struct Area {
 impl Area {
     pub fn new(area_type: u8) -> Self {
         Area{area_type}
-    } 
+    }
 }
 
 #[derive(Encode, Decode, Debug, Clone, Copy, PartialEq, Eq)]
@@ -1310,7 +1311,7 @@ pub trait Trait: accounts::Trait {
     type WeightInfo: WeightInfo;
 
     /// Represents GPS coordinate, usually 32 bit variables
-    type Coord: Default 
+    type Coord: Default
     + Parameter
     + Copy
     + PartialOrd
@@ -1338,18 +1339,18 @@ pub trait Trait: accounts::Trait {
     + Copy
     + FromBigCoord<Output = Self::Coord>
     + GetEpsilon;
-    
-    type RawCoord: Default 
-    + Parameter 
+
+    type RawCoord: Default
+    + Parameter
     + Into<i32>
     + Copy;
-    
+
     /// This allows us to have a top border for zones
     type MaxBuildingsInArea: Get<u16>;
-    
+
     /// Max available height of any building
     type MaxHeight: Get<LightCoord>;
-}    
+}
 
 pub trait WeightInfo {
     fn root_add() -> Weight;
@@ -1372,10 +1373,10 @@ decl_storage! {
             map hasher(blake2_128_concat) PageId => PageOf<T>;
 
         AreaData get(fn area_info):
-            double_map hasher(blake2_128_concat) RootId, 
-                       hasher(blake2_128_concat) AreaId => Area;    
+            double_map hasher(blake2_128_concat) RootId,
+                       hasher(blake2_128_concat) AreaId => Area;
 
-        RedZones get(fn zone_data): 
+        RedZones get(fn zone_data):
             map hasher(blake2_128_concat) ZoneId => ZoneOf<T>;
     }
 }
@@ -1443,12 +1444,12 @@ decl_error! {
         ZoneDoesntFit,
         /// Zone you are trying to access is not in storage
         ZoneDoesntExist,
-        /// Wrong time bounds are supplied 
+        /// Wrong time bounds are supplied
         WrongTimeSupplied,
         /// Route contain 1 or more wpoints, which lie outside of root
         RouteDoesNotFitToRoot,
         /// Route intersect 1 or more zones
-        RouteIntersectRedZone, 
+        RouteIntersectRedZone,
         // Add additional errors below
     }
 }
@@ -1544,31 +1545,31 @@ decl_module! {
             Self::deposit_event(RawEvent::RootCreated(id, who));
             Ok(())
         }
-        
+
         /// TODO fix this trouble with types, RawCoord is a one big crutch
         #[weight = <T as Trait>::WeightInfo::root_add()]
-        pub fn raw_root_add(origin, 
-                            // Coords is SW {lat, lon, alt} NE {lat, lon, alt} 
+        pub fn raw_root_add(origin,
+                            // Coords is SW {lat, lon, alt} NE {lat, lon, alt}
                             raw_box: [T::RawCoord; 6],
                             raw_delta: T::RawCoord) -> dispatch::DispatchResult {
             let who = ensure_signed(origin.clone())?;
             ensure!(<accounts::Module<T>>::account_is(&who, REGISTRAR_ROLE.into()), Error::<T>::NotAuthorized);
 
-            let south_west = Point3D::new(T::Coord::from_raw(raw_box[0].into()), 
-                                          T::Coord::from_raw(raw_box[1].into()), 
+            let south_west = Point3D::new(T::Coord::from_raw(raw_box[0].into()),
+                                          T::Coord::from_raw(raw_box[1].into()),
                                           T::Coord::from_raw(raw_box[2].into()));
-            let north_east = Point3D::new(T::Coord::from_raw(raw_box[3].into()), 
-                                          T::Coord::from_raw(raw_box[4].into()), 
+            let north_east = Point3D::new(T::Coord::from_raw(raw_box[3].into()),
+                                          T::Coord::from_raw(raw_box[4].into()),
                                           T::Coord::from_raw(raw_box[5].into()));
             let bounding_box = Box3D::new(south_west, north_east);
-            let delta = T::Coord::from_raw(raw_delta.into()); 
+            let delta = T::Coord::from_raw(raw_delta.into());
 
             Module::<T>::root_add(origin, bounding_box, delta)
         }
 
         /// Form index and store input to redzones, creates area struct if it doesnt exist
         #[weight = <T as Trait>::WeightInfo::zone_add()]
-        pub fn zone_add(origin, 
+        pub fn zone_add(origin,
                         rect: Rect2D<T::Coord>,
                         height: LightCoord,
                         root_id: RootId) -> dispatch::DispatchResult {
@@ -1576,7 +1577,7 @@ decl_module! {
             ensure!(<accounts::Module<T>>::account_is(&who, REGISTRAR_ROLE.into()), Error::<T>::NotAuthorized);
             ensure!(RootBoxes::<T>::contains_key(root_id), Error::<T>::RootDoesNotExist);
             ensure!(height < T::MaxHeight::get(), Error::<T>::InvalidData);
-            // Check if zone lies in one single area 
+            // Check if zone lies in one single area
             let area_id = RootBoxes::<T>::get(root_id).detect_intersected_area(rect.south_west);
             let se_area_id = RootBoxes::<T>::get(root_id).detect_intersected_area(rect.north_east);
             ensure!(area_id == se_area_id, Error::<T>::ZoneDoesntFit);
@@ -1591,10 +1592,10 @@ decl_module! {
             let max_zones = T::MaxBuildingsInArea::get();
             let first_empty_id = Self::pack_index(root_id, area_id, 0);
             let mut zone_id = first_empty_id;
-            
+
             // If area already exists, we check if it's full, and check all zones inside for intersection
             if area_existed {
-                ensure!(area.area_type == GREEN_AREA, Error::<T>::ForbiddenArea); 
+                ensure!(area.area_type == GREEN_AREA, Error::<T>::ForbiddenArea);
                 let mut current_zone = first_empty_id;
                 let mut empty_id_found = false;
                 // Maybe, this cycle should be splitted in two. One finds first unused Id,
@@ -1605,17 +1606,17 @@ decl_module! {
                         let rect_to_check = RedZones::<T>::get(current_zone).rect;
                         ensure!(!rect_to_check.intersects_rect(rect), Error::<T>::OverlappingZone);
                         current_zone += 1;
-                    } else { 
+                    } else {
                         zone_id = current_zone;
                         empty_id_found = true;
                     }
-                } 
+                }
                 ensure!(empty_id_found, Error::<T>::AreaFull);
             } else {
                 // This is first zone in area, we don't need to check any intersections and stuff.
-                zone_id = first_empty_id; 
+                zone_id = first_empty_id;
             }
-            
+
             let zone = ZoneOf::<T>::new(zone_id, rect, height);
             RedZones::<T>::insert(zone_id, zone);
             Self::deposit_event(RawEvent::ZoneCreated(root_id, area_id, zone_id, who));
@@ -1624,16 +1625,16 @@ decl_module! {
 
         /// TODO fix this trouble with types, RawCoord is a one big crutch
         #[weight = <T as Trait>::WeightInfo::zone_add()]
-        pub fn raw_zone_add(origin, 
+        pub fn raw_zone_add(origin,
                             raw_rect: [T::RawCoord; 4],
                             height: LightCoord,
                             root_id: RootId) -> dispatch::DispatchResult {
             let who = ensure_signed(origin.clone())?;
             ensure!(<accounts::Module<T>>::account_is(&who, REGISTRAR_ROLE.into()), Error::<T>::NotAuthorized);
 
-            let south_west = Point2D::new(T::Coord::from_raw(raw_rect[0].into()), 
+            let south_west = Point2D::new(T::Coord::from_raw(raw_rect[0].into()),
                                           T::Coord::from_raw(raw_rect[1].into()));
-            let north_east = Point2D::new(T::Coord::from_raw(raw_rect[2].into()), 
+            let north_east = Point2D::new(T::Coord::from_raw(raw_rect[2].into()),
                                           T::Coord::from_raw(raw_rect[3].into()));
             let rect = Rect2D::new(south_west, north_east);
 
@@ -1656,7 +1657,7 @@ decl_module! {
                 let max_zones_in_area = zone_id + max_zones as ZoneId;
                 while zone_id < max_zones_in_area {
                     if RedZones::<T>::contains_key(zone_id) {
-                        RedZones::<T>::remove(zone_id); 
+                        RedZones::<T>::remove(zone_id);
                     }
                     zone_id += 1;
                 }
@@ -1737,22 +1738,22 @@ decl_module! {
             let who = ensure_signed(origin)?;
             ensure!(<accounts::Module<T>>::account_is(&who, REGISTRAR_ROLE.into()), Error::<T>::NotAuthorized);
             ensure!(RedZones::<T>::contains_key(zone_id), Error::<T>::ZoneDoesntExist);
-            
+
             RedZones::<T>::remove(zone_id);
             Self::deposit_event(RawEvent::ZoneRemoved(zone_id, who));
             Ok(())
         }
-        
+
         /// Changes area type with u8 bit flag
         #[weight = <T as Trait>::WeightInfo::change_area_type()]
-        pub fn change_area_type(origin, 
-                                root_id: RootId, 
-                                area_id: AreaId, 
+        pub fn change_area_type(origin,
+                                root_id: RootId,
+                                area_id: AreaId,
                                 area_type: u8) -> dispatch::DispatchResult {
             let who = ensure_signed(origin)?;
             ensure!(<accounts::Module<T>>::account_is(&who, REGISTRAR_ROLE.into()), Error::<T>::NotAuthorized);
             ensure!(AreaData::contains_key(root_id, area_id), Error::<T>::NotExists);
-            
+
             AreaData::mutate(root_id, area_id, |ar| {
                 ar.area_type = area_type;
             });
@@ -1762,23 +1763,23 @@ decl_module! {
 
         /// Creates new route for UAV
         #[weight = <T as Trait>::WeightInfo::route_add()]
-        pub fn route_add(origin, 
-                        waypoints: Vec<Waypoint<T::Coord, <T as pallet_timestamp::Config>::Moment>>, 
+        pub fn route_add(origin,
+                        waypoints: Vec<Waypoint<T::Coord, <T as pallet_timestamp::Config>::Moment>>,
                         root_id: RootId) -> dispatch::DispatchResult {
             let who = ensure_signed(origin)?;
             // TODO consider role for route addition
-            ensure!(<accounts::Module<T>>::account_is(&who, (PILOT_ROLE | REGISTRAR_ROLE).into()), Error::<T>::NotAuthorized);
+            ensure!((<accounts::Module<T>>::account_is(&who, PILOT_ROLE.into())) || (UAVRegistry::<T>::contains_key(&who)), Error::<T>::NotAuthorized);
             ensure!(RootBoxes::<T>::contains_key(root_id), Error::<T>::RootDoesNotExist);
             ensure!(waypoints.len() >= 2, Error::<T>::InvalidData);
-            let start_waypoint = &waypoints.first().unwrap(); 
-            let end_waypoint = &waypoints.last().unwrap(); 
+            let start_waypoint = &waypoints.first().unwrap();
+            let end_waypoint = &waypoints.last().unwrap();
             // Getting all time bounds
             let start_time = start_waypoint.arrival;
             let arrival_time = end_waypoint.arrival;
             let current_timestamp = <pallet_timestamp::Module<T>>::get();
             // TODO (n>2) wp[n].arrival < wp[n + 1].arrival
             ensure!((arrival_time > current_timestamp) && (arrival_time > start_time), Error::<T>::WrongTimeSupplied);
-            
+
             let root = RootBoxes::<T>::get(root_id);
             let start_area = root.detect_intersected_area(start_waypoint.location.project());
             let end_area = root.detect_intersected_area(end_waypoint.location.project());
@@ -1801,27 +1802,27 @@ decl_module! {
                 }
             }
             Self::deposit_event(RawEvent::RouteAdded(
-                start_waypoint.location, end_waypoint.location, 
+                start_waypoint.location, end_waypoint.location,
                 start_time, arrival_time, root_id, who
             ));
             Ok(())
         }
 
         #[weight = <T as Trait>::WeightInfo::route_add()]
-        pub fn raw_route_add(origin, 
+        pub fn raw_route_add(origin,
                             raw_waypoints: [T::RawCoord; 4],
                             start_time: T::Moment,
                             arrival_time: T::Moment,
                             root_id: RootId) -> dispatch::DispatchResult {
             let start_location = Point3D::new(
-                T::Coord::from_raw(raw_waypoints[0].into()), 
+                T::Coord::from_raw(raw_waypoints[0].into()),
                 T::Coord::from_raw(raw_waypoints[1].into()),
                 Self::coord_from_str("1"));
 
             let start_waypoint = Waypoint::new(start_location, start_time);
 
             let arrival_location = Point3D::new(
-                T::Coord::from_raw(raw_waypoints[2].into()), 
+                T::Coord::from_raw(raw_waypoints[2].into()),
                 T::Coord::from_raw(raw_waypoints[3].into()),
                 Self::coord_from_str("1"));
 
@@ -1843,8 +1844,8 @@ impl<T: Trait> Module<T> {
             Ok(v) => v,
             Err(_) => Default::default(),
         }
-    } 
-    
+    }
+
     #[allow(dead_code)]
     fn get_root_index(raw_point: [i32; 2]) -> RootId {
         let lat = T::Coord::from_raw(raw_point[0]);
@@ -1864,7 +1865,7 @@ impl<T: Trait> Module<T> {
     /// 0000 0000 0000 0000 .... 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000
     fn pack_index(root: RootId, area: AreaId, children: u16) -> ZoneId {
         (root as ZoneId) << 64 |
-        (area as ZoneId) << 16 | 
+        (area as ZoneId) << 16 |
         children as ZoneId
     }
 
@@ -1875,7 +1876,7 @@ impl<T: Trait> Module<T> {
         let root: RootId = (index >> 64) as RootId;
         let area: AreaId = ((index >> 16) & mask_u16) as AreaId;
         let children: u16 = (index & mask_u16) as u16;
-        
+
         (root, area, children)
     }
 }

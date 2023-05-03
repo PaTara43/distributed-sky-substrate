@@ -9,7 +9,7 @@ use frame_support::{
     sp_runtime::{
         sp_std::ops::{BitAnd, BitOr},
         traits::{
-            AtLeast32Bit, Member, 
+            AtLeast32Bit, Member,
             MaybeSerializeDeserialize, Zero
         },
     },
@@ -41,7 +41,7 @@ pub mod prelude {
 pub struct Account<Moment, AccountRole, AccountManager> {
     pub roles: AccountRole,
     pub create_time: Moment,
-    pub managed_by: AccountManager, 
+    pub managed_by: AccountManager,
 }
 
 impl<
@@ -60,7 +60,7 @@ impl<
     }
 
     pub fn is_role_correct(role: AccountRole) -> bool {
-        !(role & ALL_ROLES.into()).is_zero() 
+        !(role & ALL_ROLES.into()).is_zero()
     }
 
     pub fn age(&self, now: Moment) -> Moment {
@@ -78,7 +78,7 @@ impl<
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Clone, Default)]
-pub struct UAVStruct<SerialNumber, MetaIPFS, OwnerId> { 
+pub struct UAVStruct<SerialNumber, MetaIPFS, OwnerId> {
     pub uav_id: SerialNumber,
     pub metadata_ipfs_hash: MetaIPFS,
     pub managed_by: OwnerId,
@@ -89,7 +89,7 @@ impl<
     MetaIPFS: Default,
     OwnerId: Parameter + Member + MaybeSerializeDeserialize + Ord + Default,
     > UAVStruct<SerialNumber, MetaIPFS, OwnerId>
-    { 
+    {
         pub fn new(serial: SerialNumber, meta: MetaIPFS, own: &OwnerId) -> Self {
             UAVStruct {
                 uav_id: serial,
@@ -122,7 +122,7 @@ pub trait Trait: frame_system::Config + pallet_timestamp::Config {
     type Currency: LockableCurrency<Self::AccountId, Moment = Self::BlockNumber>;
     type WeightInfo: WeightInfo;
     type SerialNumber: Default + Parameter + Clone;
-    type MetaIPFS: Default + Parameter + Clone;  
+    type MetaIPFS: Default + Parameter + Clone;
 }
 
 pub trait WeightInfo {
@@ -159,7 +159,7 @@ decl_storage! {
             config(genesis_account_registry):
             map hasher(blake2_128_concat) T::AccountId => AccountOf<T>;
 
-        UAVRegistry
+        pub UAVRegistry
             get(fn drone_registry):
             map hasher(blake2_128_concat) T::AccountId => UAVOf<T>;
     }
@@ -282,7 +282,7 @@ decl_module! {
         }
 
         #[weight = <T as Trait>::WeightInfo::register_uav()]
-        pub fn register_uav( origin, 
+        pub fn register_uav( origin,
                              serial_number: T::SerialNumber,
                              meta: T::MetaIPFS,
                              uav_address: T::AccountId, ) -> dispatch::DispatchResult {

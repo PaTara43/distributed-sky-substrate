@@ -50,7 +50,7 @@ use sp_std::str::FromStr;
 //    |                                   |
 //    |                                   |
 //    o-----------------------------------+
-// (55.390, 37,380)
+// (55.390, 37.380)
 
 type Error = super::Error<Test>;
 // TODO find out how to connect this types w mock
@@ -81,7 +81,7 @@ fn construct_testing_box() -> Box3D<Coord> {
                                   coord("1"));
     let north_east = Point3D::new(coord("55.921"),
                                   coord("37.901"),
-                                  coord("3"));      
+                                  coord("3"));
     Box3D::new(south_west, north_east)
 }
 
@@ -91,7 +91,7 @@ pub fn construct_custom_box(sw_lat: &str, sw_lon: &str, ne_lat: &str, ne_lon: &s
                                   coord("1"));
     let north_east = Point3D::new(coord(ne_lat),
                                   coord(ne_lon),
-                                  coord("3"));      
+                                  coord("3"));
     Box3D::new(south_west, north_east)
 }
 
@@ -113,13 +113,13 @@ pub fn construct_custom_rect(sw_lat: &str, sw_lon: &str, ne_lat: &str, ne_lon: &
 
 pub fn construct_testing_waypoints() -> Vec<Waypoint<Coord, Moment>> {
     let start_location = Point3D::new(coord("55.395"),
-                                    coord("37.385"),
+                                        coord("37.385"),
                                     coord("1"));
     let end_location = Point3D::new(coord("55.397"),
                                     coord("37.387"),
                                     coord("1"));
-    let start_time = 100_u64; 
-    let end_time = 110_u64; 
+    let start_time = 100_u64;
+    let end_time = 110_u64;
     let start_wp = Waypoint::new(start_location, start_time);
     let end_wp = Waypoint::new(end_location, end_time);
     vec![start_wp, end_wp]
@@ -128,7 +128,7 @@ pub fn construct_testing_waypoints() -> Vec<Waypoint<Coord, Moment>> {
 // Assume that alt is const for now.
 // TODO (n>2) replace &str in signature to an array [[&str; 4]; n]
 pub fn construct_custom_waypoints(start_lat: &str, start_lon: &str,
-                                  end_lat: &str, end_lon: &str, 
+                                  end_lat: &str, end_lon: &str,
                                   start_time: u64, end_time: u64) -> Vec<Waypoint<Coord, Moment>> {
     let start_location = Point3D::new(coord(start_lat),
                                     coord(start_lon),
@@ -423,12 +423,12 @@ fn it_try_to_add_zone_unauthorized() {
     new_test_ext().execute_with(|| {
         let account = DSAccountsModule::account_registry(2);
         assert!(!account.is_enabled());
-        
+
         assert_noop!(
             DSMapsModule::zone_add(
                 Origin::signed(ADMIN_ACCOUNT_ID),
                 construct_testing_rect(),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
             ),
             Error::NotAuthorized
@@ -451,7 +451,7 @@ fn it_try_to_add_zone_to_not_existing_root() {
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 construct_testing_rect(),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
             ),
             Error::RootDoesNotExist
@@ -478,14 +478,14 @@ fn it_try_to_add_zone_by_registrar() {
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 construct_testing_rect(),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
         ));
         assert_noop!(
             DSMapsModule::zone_add(
                 Origin::signed(ADMIN_ACCOUNT_ID),
                 construct_testing_rect(),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
             ),
             Error::NotAuthorized
@@ -511,7 +511,7 @@ fn it_try_to_get_zone() {
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 construct_testing_rect(),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
         ));
         let zone = DSMapsModule::zone_data(DSMapsModule::pack_index(ROOT_ID, AREA_ID, 0));
@@ -537,7 +537,7 @@ fn it_try_to_remove_zone() {
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 construct_testing_rect(),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
         ));
         let zone_index = DSMapsModule::pack_index(ROOT_ID, AREA_ID, 0);
@@ -573,7 +573,7 @@ fn it_try_to_add_zone_which_lies_in_different_areas() {
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 construct_custom_rect("55.395", "37.385",
                                       "56.396", "37.901"),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
             ),
             Error::ZoneDoesntFit
@@ -599,14 +599,14 @@ fn it_try_to_add_overlapping_zones() {
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 construct_testing_rect(),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
         ));
         assert_noop!(
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 construct_testing_rect(),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
             ),
             Error::OverlappingZone
@@ -633,15 +633,15 @@ fn it_try_to_add_not_overlapping_zones() {
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 construct_testing_rect(),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
         ));
         assert_ok!(
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
-                construct_custom_rect("55.391", "37.381", 
+                construct_custom_rect("55.391", "37.381",
                                       "55.392", "37.382"),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
         ));
     });
@@ -666,25 +666,25 @@ fn it_try_to_add_more_than_max_zones() {
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 construct_testing_rect(),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
         ));
         assert_ok!(
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
-                construct_custom_rect("55.391", "37.381", 
+                construct_custom_rect("55.391", "37.381",
                                       "55.392", "37.382"),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
         ));
         assert_noop!(
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
-                construct_custom_rect("55.393", "37.383", 
+                construct_custom_rect("55.393", "37.383",
                                       "55.394", "37.384"),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
-            ), 
+            ),
             Error::AreaFull
         );
     });
@@ -707,7 +707,7 @@ fn it_change_not_existing_area_type() {
         ));
         assert_noop!(
             DSMapsModule::change_area_type(
-                Origin::signed(REGISTRAR_1_ACCOUNT_ID),  
+                Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 ROOT_ID,
                 AREA_ID,
                 0
@@ -736,12 +736,12 @@ fn it_change_existing_area_type() {
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 construct_testing_rect(),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
         ));
         assert_ok!(
             DSMapsModule::change_area_type(
-                Origin::signed(REGISTRAR_1_ACCOUNT_ID), 
+                Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 ROOT_ID,
                 AREA_ID,
                 0
@@ -750,9 +750,9 @@ fn it_change_existing_area_type() {
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 construct_testing_rect(),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
-            ), 
+            ),
             Error::ForbiddenArea
         );
     });
@@ -783,7 +783,7 @@ fn it_dispatchable_get_root_index() {
     });
 }
 
-// Not sure if there's need to try this unauthorized 
+// Not sure if there's need to try this unauthorized
 #[test]
 fn it_add_route_by_registrar() {
     new_test_ext().execute_with(|| {
@@ -861,7 +861,7 @@ fn it_add_route_wrong_timestamps() {
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 waypoints,
                 ROOT_ID,
-            ), 
+            ),
             Error::WrongTimeSupplied
         );
     });
@@ -891,10 +891,10 @@ fn it_add_route_wrong_waypoints() {
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 single_waypoint,
                 ROOT_ID,
-            ), 
+            ),
             Error::InvalidData
         );
-            
+
         let waypoints = construct_custom_waypoints(
             "55.395", "37.385",
             "10", "37",
@@ -904,7 +904,7 @@ fn it_add_route_wrong_waypoints() {
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 waypoints,
                 ROOT_ID,
-            ), 
+            ),
             Error::RouteDoesNotFitToRoot
         );
     });
@@ -936,7 +936,7 @@ fn it_add_route_without_zones() {
     });
 }
 
-// This test contain two zones, one is intersecting route, and another is not 
+// This test contain two zones, one is intersecting route, and another is not
 #[test]
 fn it_add_route_one_area() {
     new_test_ext().execute_with(|| {
@@ -958,7 +958,7 @@ fn it_add_route_one_area() {
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 construct_custom_rect("55.391", "37.381", "55.392", "37.382"),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
         ));
         assert_ok!(
@@ -972,7 +972,7 @@ fn it_add_route_one_area() {
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 construct_testing_rect(),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
         ));
         assert_noop!(
@@ -1007,7 +1007,7 @@ fn it_add_route_multiple_areas() {
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 construct_custom_rect("55.411", "37.372", "55.416", "37.375"),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
         ));
         assert_ok!(
@@ -1021,7 +1021,7 @@ fn it_add_route_multiple_areas() {
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 construct_testing_rect(),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
         ));
         assert_noop!(
@@ -1057,7 +1057,7 @@ fn it_add_route_and_remove_zone() {
             DSMapsModule::zone_add(
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 construct_testing_rect(),
-                DEFAULT_HEIGHT, 
+                DEFAULT_HEIGHT,
                 ROOT_ID,
             )
         );
@@ -1067,7 +1067,7 @@ fn it_add_route_and_remove_zone() {
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 waypoints.clone(),
                 ROOT_ID,
-            ), 
+            ),
             Error::RouteIntersectRedZone
         );
         let zone_index = DSMapsModule::pack_index(ROOT_ID, AREA_ID, 0);
@@ -1113,7 +1113,7 @@ fn it_add_lots_of_zones() {
                 DSMapsModule::zone_add(
                     Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                     testing_rect,
-                    DEFAULT_HEIGHT, 
+                    DEFAULT_HEIGHT,
                     ROOT_ID,
                 )
             );
@@ -1126,7 +1126,7 @@ fn it_add_lots_of_zones() {
                 Origin::signed(REGISTRAR_1_ACCOUNT_ID),
                 waypoints.clone(),
                 ROOT_ID,
-            ), 
+            ),
             Error::RouteIntersectRedZone
         );
         let zone_index = DSMapsModule::pack_index(ROOT_ID, AREA_ID, 0);
